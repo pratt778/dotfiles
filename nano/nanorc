@@ -1,0 +1,51 @@
+# ==============================================================================
+# THE ULTIMATE NANO CONFIGURATION v2.2 (Final Polish)
+# ==============================================================================
+
+# --- 🎨 VISUALS & STYLE ---
+set linenumbers
+set constantshow
+set softwrap
+set smarthome
+set indicator
+set minibar
+set boldtext
+set showcursor
+
+# --- ⚡ USAGE & WORKFLOW ---
+set autoindent
+set tabsize 4
+set tabstospaces
+set trimblanks
+set mouse
+set multibuffer
+set zap
+set casesensitive
+set jumpyscrolling
+
+# --- 💾 SAFETY & HISTORY ---
+set backup
+set backupdir "~/.nano_backups"
+set historylog
+set positionlog
+
+# --- 🌈 UI COLORS (Cybersecurity Aesthetic) ---
+set titlecolor bold,white,blue
+set statuscolor bold,white,cyan
+set errorcolor bold,white,red
+set selectedcolor white,magenta
+set numbercolor yellow
+set keycolor lightcyan
+set functioncolor white
+set minicolor lightmagenta
+
+# --- 🔍 SYNTAX HIGHLIGHTING ---
+include "/usr/share/nano/*.nanorc"
+include "/usr/share/nano-syntax-highlighting/*.nanorc"
+
+# --- ✨ THE "PRO" ADDITIONS ---
+# Corrected: ( ) < > [ ] { } = 8 characters
+set matchbrackets "()<>[]{}"
+
+# Highlight search results in bright green
+set spotlightcolor black,lightgreen
