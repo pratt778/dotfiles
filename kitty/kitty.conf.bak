@@ -1,0 +1,23 @@
+# Theme
+include current-theme.conf
+
+# Font
+font_family      BlexMono Nerd Font
+font_size        12
+
+# Appearance
+background_opacity 0.95
+window_border_width 1.2
+window_padding_width 5
+window_margin_width 3
+
+# Performance
+repaint_delay 10
+input_delay 3
+
+# Tab bar
+tab_bar_style powerline
+
+# Mouse & Cursor
+copy_on_select yes
+cursor_shape block
