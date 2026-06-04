@@ -1,0 +1,24 @@
+/**
+ * Power Profiles Config
+ **/
+
+@import "config.rasi"
+
+window {
+    width:                        400px;
+}
+
+listview {
+    lines:                        4;
+}
+
+mainbox {
+    children:                     [ "message", "listview" ];
+}
+
+message {
+    padding:                     10px;
+    background-color:            @background-alt;
+    text-color:                  @foreground;
+    border-radius:               8px;
+}

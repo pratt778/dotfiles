@@ -1,0 +1,111 @@
+/**
+ * Midnight Custom - Refined Search & Text
+ **/
+configuration {
+    modi:                       "drun,run,filebrowser,window";
+    show-icons:                 true;
+    display-drun:               "";
+    display-window:             "";
+    drun-display-format:        "{name}";
+    window-format:              "{w} · {c} · {t}";
+}
+
+@theme "/dev/null"
+@import "colors.rasi"
+
+* {
+    font: "JetBrains Mono 14";
+}
+
+window {
+    transparency:                "real";
+    location:                    center;
+    anchor:                      center;
+    width:                       700px;
+    border:                      1px solid;
+    border-radius:               8px;
+    border-color:                @border-color;
+    background-color:            @background;
+}
+
+mainbox {
+    spacing:                     20px;
+    padding:                     40px;
+    background-color:            transparent;
+    children:                    [ "inputbar", "listview" ];
+}
+
+inputbar {
+    spacing:                     15px;
+    padding:                     15px 25px;
+    border:                      1px solid;
+    border-radius:               8px;
+    border-color:                @border-color;
+    background-color:            @background-alt;
+    text-color:                  @foreground;
+    children:                    [ "prompt", "entry" ];
+}
+
+prompt {
+    enabled:                     true;
+    background-color:            transparent;
+    text-color:                  @foreground-alt;
+    font:                        "JetBrains Mono 18"; 
+    vertical-align:              0.5;
+}
+
+entry {
+    enabled:                     true;
+    background-color:            transparent;
+    text-color:                  inherit;
+    cursor:                      text;
+    placeholder:                 "Search...";
+    placeholder-color:           @foreground-alt;
+    vertical-align:              0.5;
+}
+
+listview {
+    enabled:                     true;
+    columns:                     1;
+    lines:                       8;
+    cycle:                       true;
+    dynamic:                     true;
+    scrollbar:                   false;
+    layout:                      vertical;
+    reverse:                     false;
+    fixed-height:                true;
+    fixed-columns:               true;
+    spacing:                     8px;
+    background-color:            transparent;
+    text-color:                  @foreground;
+}
+
+element {
+    enabled:                     true;
+    spacing:                     15px;
+    padding:                     12px;
+    border-radius:               6px;
+    background-color:            transparent;
+    text-color:                  inherit;
+    cursor:                      pointer;
+}
+
+element selected.normal {
+    background-color:            @selected;
+    text-color:                  @foreground;
+}
+
+element-icon {
+    size:                        36px;
+    background-color:            transparent;
+    text-color:                  inherit;
+    cursor:                      inherit;
+}
+
+element-text {
+    vertical-align:              0.5;
+    background-color:            transparent;
+    text-color:                  inherit;
+    highlight:                   inherit;
+    cursor:                      inherit;
+}

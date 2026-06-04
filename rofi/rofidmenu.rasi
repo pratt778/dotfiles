@@ -1,0 +1,30 @@
+/**
+ * Apps Grid - Large Icons
+ **/
+
+@import "config.rasi"
+
+window {
+    width:                        900px;
+}
+
+listview {
+    columns:                      4;
+    lines:                        3;
+    spacing:                      20px;
+}
+
+element {
+    orientation:                  vertical;
+    padding:                      25px;
+}
+
+element-icon {
+    size:                        72px; /* Large high-quality icons */
+    horizontal-align:            0.5;
+}
+
+element-text {
+    horizontal-align:            0.5;
+    font:                        "JetBrains Mono Bold 12";
+}

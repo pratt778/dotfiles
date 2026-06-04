@@ -1,0 +1,96 @@
+/**
+ * Midnight Power Menu
+ **/
+
+@theme "/dev/null"
+@import "colors.rasi"
+
+configuration {
+    show-icons:                 true;
+    icon-theme:                 "Qogir-Dark";
+    kb-cancel:                  "Control+g,Control+bracketleft";
+    kb-custom-1:                "Escape";
+    me-select-entry:            "";
+    me-accept-entry:            "MousePrimary";
+}
+
+* {
+    font:                       "JetBrains Mono 13";
+}
+
+window {
+    transparency:                "real";
+    location:                    center;
+    anchor:                      center;
+    width:                       560px;
+    border:                      1px solid;
+    border-radius:               8px;
+    border-color:                @border-color;
+    background-color:            @background;
+}
+
+mainbox {
+    background-color:            transparent;
+    children:                    [ "message", "listview" ];
+    padding:                     30px;
+    spacing:                     24px;
+}
+
+message {
+    background-color:            transparent;
+    text-color:                  @foreground;
+}
+
+textbox {
+    background-color:            transparent;
+    text-color:                  @foreground;
+    font:                        "JetBrains Mono Bold 16";
+    horizontal-align:            0.5;
+}
+
+listview {
+    enabled:                     true;
+    columns:                     3;
+    lines:                       2;
+    spacing:                     14px;
+    background-color:            transparent;
+    fixed-columns:               true;
+    fixed-height:                true;
+    scrollbar:                   false;
+}
+
+element {
+    enabled:                     true;
+    padding:                     18px 8px;
+    border:                      1px solid;
+    border-radius:               8px;
+    border-color:                @border-color;
+    background-color:            @background-alt;
+    text-color:                  @foreground;
+    cursor:                      pointer;
+    orientation:                 vertical;
+    spacing:                     10px;
+}
+
+element selected.normal {
+    background-color:            @selected;
+    border-color:                @selected;
+    text-color:                  @foreground;
+}
+
+element-icon {
+    size:                        40px;
+    background-color:            transparent;
+    text-color:                  inherit;
+    cursor:                      inherit;
+    horizontal-align:            0.5;
+}
+
+element-text {
+    background-color:            transparent;
+    text-color:                  inherit;
+    cursor:                      inherit;
+    horizontal-align:            0.5;
+    vertical-align:              0.5;
+    font:                        "JetBrains Mono Bold 12";
+}

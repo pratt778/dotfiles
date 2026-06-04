@@ -1,0 +1,11 @@
+/* Midnight Custom - Muted */
+* {
+    background:     #0B0F14;
+    background-alt: #161B22;
+    foreground:     #FFFFFF;
+    foreground-alt: #636E7B; /* Muted gray for icons/placeholders */
+    selected:       #314C77; /* Soft, deep blue instead of bright blue */
+    active:         #238636;
+    urgent:         #DA3633;
+    border-color:   #30363D;
+}

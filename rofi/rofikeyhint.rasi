@@ -1,0 +1,21 @@
+/**
+ * Key Hints Config
+ **/
+
+@import "config.rasi"
+
+window {
+    width:                        600px;
+}
+
+listview {
+    lines:                        12;
+}
+
+mainbox {
+    children:                     [ "inputbar", "listview" ];
+}
+
+element {
+    padding:                      8px 15px;
+}
