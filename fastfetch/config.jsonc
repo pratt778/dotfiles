@@ -1,0 +1,30 @@
+{
+  "logo": {
+    "source": "locos",
+ 
+  },
+  "display": {
+    "color": {
+      "keys": "magenta",
+      "title": "magenta"
+    },
+    "separator": " ─ "
+  },
+  "modules": [
+    "title",
+    "separator",
+    "os",
+    "kernel",
+    "shell",
+    "cpu",
+    "memory",
+    "disk",
+    "uptime",
+    "packages",
+    {
+      "type": "colors",
+      "paddingLeft": 1,
+      "symbol": "circle"
+    }
+  ]
+}
