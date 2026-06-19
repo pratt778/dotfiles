@@ -3,7 +3,8 @@
 
 # Path to your Oh My Zsh installation.
 export ZSH="$HOME/.oh-my-zsh"
-
+export PATH="$HOME/.local/kitty.app/bin:$PATH"
+export PATH="$HOME/.npm-global/bin:$PATH"
 # Set name of the theme to load --- if set to "random", it will
 # load a random theme each time Oh My Zsh is loaded, in which case,
 # to know which specific one was loaded, run: echo $RANDOM_THEME
@@ -70,7 +71,7 @@ ZSH_THEME="robbyrussell"
 # Custom plugins may be added to $ZSH_CUSTOM/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(git zsh-autosuggestions zsh-syntax-highlighting z sudo)
+plugins=(git z sudo)
 
 source $ZSH/oh-my-zsh.sh
 
@@ -102,4 +103,13 @@ source $ZSH/oh-my-zsh.sh
 # Example aliases
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
+export STARSHIP_CONFIG="$HOME/prathamsharma/config_files/dotfiles/starship/starship.toml"
+
+if [[ -o interactive && "$TERM" == "xterm-kitty" && -z "$FASTFETCH_SHOWN" ]] && command -v fastfetch >/dev/null 2>&1; then
+  export FASTFETCH_SHOWN=1
+  fastfetch
+fi
+
 eval "$(starship init zsh)"
+source /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh

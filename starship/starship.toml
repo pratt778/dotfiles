@@ -1,0 +1,2 @@
+# Give Starship more time to scan large or slow directories before warning.
+scan_timeout = 100
