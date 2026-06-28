@@ -42,7 +42,7 @@ case $chosen in
         systemctl reboot
         ;;
     "Lock")
-        loginctl lock-session
+        /usr/bin/betterlockscreen -l blur
         ;;
     "Suspend")
         systemctl suspend

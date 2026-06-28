@@ -1,2 +1,2 @@
 #!/bin/bash
-betterlockscreen -l blur
+/usr/bin/betterlockscreen -l blur
