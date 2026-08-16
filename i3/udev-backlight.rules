@@ -1,0 +1,10 @@
+# Give the 'video' group read/write access to the Intel backlight so that
+# polybar's backlight module and the i3 brightness keys (~/.config/i3/brightness.sh)
+# can change brightness WITHOUT root.
+#
+# Install (requires one sudo):
+#   sudo cp /home/pratham/.config/i3/udev-backlight.rules /etc/udev/rules.d/90-backlight.rules
+#   sudo usermod -aG video "$USER"
+#   sudo udevadm control --reload && sudo udevadm trigger --subsystem-match=backlight
+# Then log out and back in so the 'video' group membership takes effect.
+SUBSYSTEM=="backlight", ACTION=="add", RUN+="/bin/chgrp video /sys/class/backlight/%k/brightness", RUN+="/bin/chmod g+w /sys/class/backlight/%k/brightness"
