@@ -29,15 +29,14 @@ exec --no-startup-id xss-lock --transfer-sleep-lock -- /usr/bin/betterlockscreen
 
 # NetworkManager is the most popular way to manage wireless networks on Linux,
 # and nm-applet is a desktop environment-independent system tray GUI for it.
-exec_always --no-startup-id picom -b
+exec --no-startup-id picom -b
 exec --no-startup-id feh --bg-scale ~/.wallpaper.png
 
 # Use pactl to adjust volume in PulseAudio.
-set $refresh_i3status killall -SIGUSR1 i3status
-bindsym XF86AudioRaiseVolume exec --no-startup-id bash ~/.config/i3/volume-up.sh
-bindsym XF86AudioLowerVolume exec --no-startup-id pactl set-sink-volume @DEFAULT_SINK@ -3% && $refresh_i3status
-bindsym XF86AudioMute exec --no-startup-id pactl set-sink-mute @DEFAULT_SINK@ toggle && $refresh_i3status
-bindsym XF86AudioMicMute exec --no-startup-id pactl set-source-mute @DEFAULT_SOURCE@ toggle && $refresh_i3status
+bindsym XF86AudioRaiseVolume exec --no-startup-id bash ~/.config/i3/volume.sh up
+bindsym XF86AudioLowerVolume exec --no-startup-id bash ~/.config/i3/volume.sh down
+bindsym XF86AudioMute exec --no-startup-id bash ~/.config/i3/volume.sh mute
+bindsym XF86AudioMicMute exec --no-startup-id pactl set-source-mute @DEFAULT_SOURCE@ toggle
 
 # use these keys for focus, movement, and resize directions when reaching for
 # the arrows is not convenient
@@ -215,12 +214,11 @@ gaps inner 0
 gaps outer 0
 bindsym Mod4+p exec --no-startup-id ~/.config/rofi/powermenu.sh
 
-# Brightness controls
-bindsym XF86MonBrightnessUp exec --no-startup-id brightnessctl set +5%
-bindsym XF86MonBrightnessDown exec --no-startup-id brightnessctl set 5%-
+# Brightness controls (+OSD)
+bindsym XF86MonBrightnessUp exec --no-startup-id bash ~/.config/i3/brightness.sh up
+bindsym XF86MonBrightnessDown exec --no-startup-id bash ~/.config/i3/brightness.sh down
 
-#Volume control
-exec --no-startup-id pactl set-sink-volume @DEFAULT_SINK@ 153%
+# Volume is handled by ~/.config/i3/volume.sh (keys above); no forced level here.
 
 # Screenshots
 bindsym Print exec --no-startup-id flameshot gui
@@ -236,3 +234,20 @@ bindsym Mod4+b exec --no-startup-id kitty -e ranger
 # toggle workspaces
 bindsym Mod1+Tab workspace next
 bindsym Mod1+Shift+Tab workspace prev
+
+# --- Clipboard manager (greenclip) ---
+exec --no-startup-id greenclip daemon
+# Paste / re-pick from clipboard history: Mod4+Shift+V
+bindsym Mod4+Shift+v exec --no-startup-id bash ~/.config/i3/clipboard.sh
+
+# --- Toggle window gaps (packed <-> 6px) ---
+bindsym Mod4+g exec --no-startup-id bash ~/.config/i3/gaps-toggle.sh
+
+# --- Startup apps ---
+assign [class="firefox"] workspace 1
+assign [class="kitty"] workspace 2
+assign [class="obsidian"] workspace 3
+
+exec --no-startup-id firefox
+exec --no-startup-id kitty
+exec --no-startup-id /home/prathams/Applications/obsidian.AppImage
