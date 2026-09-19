@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 # Place the once-per-login startup apps on their dedicated workspaces.
+#   Firefox → workspace 1 (see launch calls at the bottom).
+#   Obsidian is intentionally NOT launched here anymore.
 #
 # Why a script instead of i3 `assign` rules? An `assign` rule fires for every
 # window of that class, so manually launching the app (rofi / Mod+d / ...)
@@ -38,8 +40,5 @@ launch_on_ws () {
 
 # Firefox → workspace 1 (fresh instance so this never hijacks an existing one).
 launch_on_ws 1 firefox firefox --new-instance &
-
-# Obsidian → workspace 3
-launch_on_ws 3 obsidian flatpak run md.obsidian.Obsidian &
 
 wait || true

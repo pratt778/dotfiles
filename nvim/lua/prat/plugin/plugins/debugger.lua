@@ -22,7 +22,7 @@ return {
     'jay-babu/mason-nvim-dap.nvim',
 
     -- Add your own debuggers here
-    'leoluz/nvim-dap-go',
+    -- 'leoluz/nvim-dap-go',
   },
   keys = {
     -- Basic debugging keymaps, feel free to change to your liking!
@@ -74,7 +74,21 @@ return {
       function()
         require('dapui').toggle()
       end,
-      desc = 'Debug: See last session result.',
+      desc = 'Debug: Toggle UI (console + scopes)',
+    },
+    {
+      '<leader>dc',
+      function()
+        require('dapui').float_element('console', { enter = true })
+      end,
+      desc = 'Debug: Floating [C]onsole',
+    },
+    {
+      '<leader>dr',
+      function()
+        require('dapui').float_element 'repl'
+      end,
+      desc = 'Debug: Floating [R]EPL',
     },
   },
   config = function()
@@ -101,11 +115,31 @@ return {
     -- Dap UI setup
     -- For more information, see |:help nvim-dap-ui|
     dapui.setup {
+      -- Compact layout: only console + scopes, small bottom area.
+      -- The UI no longer auto-opens on run — press <F7> to toggle it when
+      -- you actually want to inspect scopes/breakpoints.
+      layouts = {
+        {
+          elements = {
+            {
+              id = 'console',
+              size = 0.55,
+            },
+            {
+              id = 'scopes',
+              size = 0.45,
+            },
+          },
+          size = 10,
+          position = 'bottom',
+        },
+      },
       -- Set icons to characters that are more likely to work in every terminal.
       --    Feel free to remove or use ones that you like more! :)
       --    Don't feel like these are good choices.
       icons = { expanded = '▾', collapsed = '▸', current_frame = '*' },
       controls = {
+        enabled = false,
         icons = {
           pause = '⏸',
           play = '▶',
@@ -132,17 +166,19 @@ return {
     --   vim.fn.sign_define(tp, { text = icon, texthl = hl, numhl = hl })
     -- end
 
-    dap.listeners.after.event_initialized['dapui_config'] = dapui.open
-    dap.listeners.before.event_terminated['dapui_config'] = dapui.close
-    dap.listeners.before.event_exited['dapui_config'] = dapui.close
+    -- Do NOT auto-open the DAP UI on every run — that was eating half the
+    -- screen with empty DAP windows. Press <F7> to toggle it on demand.
+    -- dap.listeners.after.event_initialized['dapui_config'] = dapui.open
+    -- dap.listeners.before.event_terminated['dapui_config'] = dapui.close
+    -- dap.listeners.before.event_exited['dapui_config'] = dapui.close
 
-    -- Install golang specific config
-    require('dap-go').setup {
-      delve = {
-        -- On Windows delve must be run attached or it crashes.
-        -- See https://github.com/leoluz/nvim-dap-go/blob/main/README.md#configuring
-        detached = vim.fn.has 'win32' == 0,
-      },
-    }
+    -- -- Install golang specific config
+    -- require('dap-go').setup {
+    --   delve = {
+    --     -- On Windows delve must be run attached or it crashes.
+    --     -- See https://github.com/leoluz/nvim-dap-go/blob/main/README.md#configuring
+    --     detached = vim.fn.has 'win32' == 0,
+    --   },
+    -- }
   end,
 }

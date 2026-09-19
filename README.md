@@ -44,6 +44,20 @@ trail support, Fastfetch startup output, and Starship timeout tuning.
 - `polybar/polybar` exists on this branch as a symlink to the local Polybar config directory.
 - This looks environment-specific and may not be portable to other machines.
 
+### Neovim
+
+- `nvim/` is now the single source of truth for the Neovim config and is
+  symlinked to `~/.config/nvim`.
+- Replaces the old pristine `kickstart.nvim` copy that used to live here.
+- The previous clone of `arjablc/nvim_conf` is no longer used and its `.git`
+  directory was removed, so the config is versioned by this repo instead.
+- Personal modules live under `lua/prat/` (the upstream `knot` modules were
+  renamed to `prat`) and `lua/vs_config/` for the VS Code Neovim extension.
+- `init.lua` loads `vs_config` when running inside VS Code, otherwise it loads
+  `prat.configs` and `prat.plugin`.
+- Upstream-only `.github/` workflow and issue-template files were dropped, and
+  the runtime `.nvimlog` is ignored.
+
 ## Apply Changes
 
 Reload i3:
@@ -81,4 +95,16 @@ Reload Kitty config inside Kitty:
 
 ```text
 Ctrl+Shift+R
+```
+
+Verify Neovim loads the symlinked config:
+
+```sh
+nvim --headless -c 'lua print(vim.fn.stdpath("config"))' -c 'qall'
+```
+
+Expected output:
+
+```text
+/home/pratham/.config/nvim
 ```

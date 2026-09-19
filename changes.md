@@ -7,9 +7,12 @@ compared to `main`.
 
 - `README.md`
 - `i3/config`
+- `i3/startup-placement.sh`
 - `kitty/kitty.conf`
+- `nvim/**`
 - `picom/picom.conf`
 - `polybar/polybar`
+- `polybar/config.ini`
 - `starship/starship.toml`
 - `zsh/.zshrc`
 
@@ -26,6 +29,23 @@ compared to `main`.
 - Kitty launcher was changed to the newer installed binary:
   - `Mod+Enter` now launches `~/.local/kitty.app/bin/kitty`
   - `Mod+b` now launches `~/.local/kitty.app/bin/kitty -e ranger`
+- Added classic window cycling with `Alt+Tab` and `Alt+Shift+Tab`
+  (`focus next` / `focus prev`).
+- Workspaces can now also be switched with `Alt+1`..`Alt+0`, and windows moved
+  to them with `Alt+Shift+1`..`Alt+Shift+0`, so the `Mod4+N` bindings are no
+  longer the only option.
+- Added quick workspace hops:
+  - `Mod4+Tab` cycles back to the previous workspace (`workspace back_and_forth`)
+  - `Mod4+grave` goes to the next workspace
+  - `Mod4+Shift+grave` goes to the previous workspace
+
+### `i3/startup-placement.sh`
+
+- Obsidian is no longer launched at login; its
+  `launch_on_ws 3 obsidian flatpak run md.obsidian.Obsidian &` call was removed.
+- Firefox is still placed on workspace 1.
+- The header comment was updated to record both facts, so the script's
+  behaviour is documented where it lives.
 
 ### `kitty/kitty.conf`
 
@@ -70,6 +90,8 @@ and out.
 - Exports `STARSHIP_CONFIG` to point at the repo's Starship config.
 - Runs `fastfetch` once for interactive Kitty shells.
 - Keeps zsh autosuggestions and syntax highlighting sourced directly.
+- Adds `~/flutter/bin` and `~/zero/bin` to `PATH` for the DartNative (`dn`)
+  toolchain.
 
 ### `README.md`
 
@@ -82,19 +104,43 @@ and out.
 
 ### `polybar/config.ini`
 
-- Keeps the same bar height, but switches to a tighter visual style.
+- Made the bar smaller and tighter:
+  - `height` `20pt` became `18pt`
+  - `dpi` `150` became `120`
+  - `line-size` `2pt` became `1pt`
+  - `font-0` `FiraCode Nerd Font:size=9;2` became `:size=10;1`
+  - workspace label padding `2` became `1`
 - Uses a darker palette with lighter foreground text.
 - Replaces plain text module prefixes with Nerd Font icons.
 - Tightens workspace, window-title, network, CPU, memory, volume, and clock
   labels for a more compact layout.
 
+### `nvim/`
+
+- Replaced the pristine `kickstart.nvim` copy with the config that is actually
+  in use, and symlinked `~/.config/nvim` at it.
+- The config used to be a separate clone of `arjablc/nvim_conf`; that `.git`
+  directory was removed so this repo is the single source of truth.
+- The upstream `lua/knot/` modules were renamed to `lua/prat/`, so personal
+  modules are no longer filed under the upstream author's name.
+- `lua/vs_config/` was added for the VS Code Neovim extension; `init.lua` loads
+  it only when `vim.g.vscode` is set, otherwise it loads `prat.configs` and
+  `prat.plugin`.
+- Upstream-only `.github/` workflow and issue-template files were dropped.
+- `.nvimlog` is now git-ignored since it is a runtime log.
+
 ## Operational Effect
 
+- `~/.config/nvim` reads straight from this repo, so Neovim edits are tracked
+  like the other configs instead of living in a second clone.
 - Windows should no longer fade in/out through Picom.
 - Kitty should use the newer binary and show cursor trails.
 - Starship should stop warning as quickly when scanning large directories and
   use a simpler prompt.
 - Kitty shells should print Fastfetch on startup.
-- Polybar should feel denser and more polished without taking more vertical
-  space.
+- Polybar should feel denser and more polished while taking slightly less
+  vertical space.
+- `Alt+Tab` should cycle windows and `Alt+N` should switch workspaces, which is
+  easier to reach than the `Mod4+N` equivalents.
+- Login no longer opens Obsidian on workspace 3.
 - Fonts and cursor sizing are tuned a bit more for the small screen setup.
