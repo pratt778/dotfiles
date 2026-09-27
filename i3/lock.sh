@@ -1,7 +1,9 @@
 #!/bin/bash
-# Lock the screen.
-# NOTE: was `betterlockscreen -l blur`, but betterlockscreen is not installed
-# on this machine. i3lock is (and is what xss-lock already uses on suspend).
-# If you install betterlockscreen and prefer the blur background, restore this
-# line instead.
-i3lock --nofork --ignore-empty-password
+# Modern blurred lockscreen with clock, date and password indicator.
+# Uses betterlockscreen with your custom wallpaper and midnight theme.
+
+if command -v betterlockscreen >/dev/null 2>&1; then
+    exec betterlockscreen -l blur
+else
+    exec i3lock --nofork --ignore-empty-password
+fi

@@ -1,0 +1,6 @@
+# Python bytecode (i3/scripts/session_lib.py gets imported during development)
+__pycache__/
+*.pyc
+
+# Neovim runtime log (see nvim/README notes)
+.nvimlog

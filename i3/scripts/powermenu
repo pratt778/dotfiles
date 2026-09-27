@@ -67,10 +67,10 @@ case $chosen in
         i3-msg exit
         ;;
     "$reboot")
-        systemctl reboot
+        exec "$HOME/.config/i3/scripts/power-session.sh" reboot
         ;;
     "$shutdown")
-        systemctl poweroff
+        exec "$HOME/.config/i3/scripts/power-session.sh" shutdown
         ;;
     "$suspend")
         systemctl suspend

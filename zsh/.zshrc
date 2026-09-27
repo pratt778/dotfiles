@@ -125,3 +125,6 @@ export NVM_DIR="$HOME/.nvm"
 
 # DartNative (dn)
 export PATH="/home/pratham/flutter/bin:/home/pratham/zero/bin:$PATH"
+
+# chromium
+export CHROME_EXECUTABLE=/var/lib/flatpak/exports/bin/org.chromium.Chromium

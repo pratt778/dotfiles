@@ -36,21 +36,31 @@ case $chosen in
         exit 0
         ;;
     "Shutdown")
-        systemctl poweroff
+        posix_power=shutdown
         ;;
     "Reboot")
-        systemctl reboot
+        posix_power=reboot
         ;;
     "Lock")
-        loginctl lock-session
+        ~/.config/i3/lock.sh &
+        exit 0
         ;;
     "Suspend")
+        ~/.config/i3/lock.sh &
+        sleep 0.5
         systemctl suspend
+        exit 0
         ;;
     "Logout")
         loginctl terminate-user $USER
+        exit 0
         ;;
     *)
         exit 0
         ;;
 esac
+
+# Shutdown/Reboot go through power-session.sh, which asks whether to save the
+# exact session first. Its dialog defaults to "No" (Enter/Escape = plain
+# shutdown), so the old immediate behaviour is one key press away.
+exec "$HOME/.config/i3/scripts/power-session.sh" "$posix_power"

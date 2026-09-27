@@ -25,7 +25,7 @@ exec --no-startup-id dex --autostart --environment i3
 
 # xss-lock grabs a logind suspend inhibit lock and will use i3lock to lock the
 # screen before suspend. Use loginctl lock-session to lock your screen.
-exec --no-startup-id xss-lock --transfer-sleep-lock -- i3lock --nofork
+exec --no-startup-id xss-lock --transfer-sleep-lock -- ~/.config/i3/lock.sh
 
 # NetworkManager is the most popular way to manage wireless networks on Linux,
 # and nm-applet is a desktop environment-independent system tray GUI for it.
@@ -42,8 +42,12 @@ exec --no-startup-id feh --bg-fill ~/prathamsharma/config_files/wallpapers/wallp
 # open on whatever workspace you are currently on.
 assign [class="^StartupKitty$"] → workspace 2
 
-exec --no-startup-id ~/.local/kitty.app/bin/kitty --class StartupKitty
-exec --no-startup-id ~/.config/i3/startup-placement.sh
+# One-shot login dispatcher: if a session was saved on purpose (Mod4+p ->
+# Shutdown/Reboot -> "Yes, save & shut down"), rebuild those exact tabs and
+# workspaces instead of starting the default apps. See
+# ~/.config/i3/scripts/startup-session.sh.
+exec --no-startup-id ~/.config/i3/scripts/startup-session.sh
+
 
 # Use pactl to adjust volume (the taskbar is polybar; it refreshes itself).
 bindsym XF86AudioRaiseVolume exec --no-startup-id bash ~/.config/i3/volume-up.sh

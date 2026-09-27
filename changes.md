@@ -7,12 +7,15 @@ compared to `main`.
 
 - `README.md`
 - `i3/config`
+- `i3/scripts/{session_lib.py,session-save.sh,session-restore.sh,power-session.sh,startup-session.sh}`
+- `i3/scripts/powermenu`
 - `i3/startup-placement.sh`
 - `kitty/kitty.conf`
 - `nvim/**`
 - `picom/picom.conf`
 - `polybar/polybar`
 - `polybar/config.ini`
+- `rofi/powermenu.sh`
 - `starship/starship.toml`
 - `zsh/.zshrc`
 
@@ -129,6 +132,33 @@ and out.
 - Upstream-only `.github/` workflow and issue-template files were dropped.
 - `.nvimlog` is now git-ignored since it is a runtime log.
 
+### `i3/scripts/session_*` and `rofi/powermenu.sh`
+
+`Mod4+p` → Shutdown/Reboot now asks **"Save this session before shutting down?"**
+with **No** as the default answer (Enter/Escape shuts down as before).
+
+- `power-session.sh` shows the question (`zenity`, `rofi` fallback, default No),
+  runs `session-save.sh` when the answer is Yes, clears the stale `pending` flag
+  when it is No, and then performs `systemctl poweroff|reboot`.
+- `session_lib.py save` records the exact desktop:
+  - `i3-save-tree` per workspace with `class`/`instance` swallow criteria,
+  - one launch recipe per window: kitty session file (tabs/splits/cwd), Firefox
+    session store copy, Brave/Edge/Chromium `Sessions` copy +
+    `--restore-last-session`, VS Code project folder, Thunar directory, and a
+    `.desktop` `Exec` fallback for everything else,
+  - the focused workspace/window, plus a `pending` flag for the next login.
+- `session_lib.py restore` recreates each workspace, appends its layout so i3
+  plants placeholders, relaunches the apps into them, moves windows that landed
+  on the wrong workspace, removes placeholders whose app never returned and
+  restores the focus. It runs as a background one-shot and writes a log plus a
+  desktop notification.
+- `startup-session.sh` replaces the two startup `exec` lines in `i3/config`: it
+  restores a pending session instead of launching the default Kitty + Firefox,
+  so nothing is started twice.
+- `kitty.conf` gains `allow_remote_control socket-only` and
+  `listen_on unix:@kitty-session-restore` so kitty's own state (tabs, splits,
+  cwd, safe foreground programs) can be read and replayed.
+
 ## Operational Effect
 
 - `~/.config/nvim` reads straight from this repo, so Neovim edits are tracked
@@ -143,4 +173,7 @@ and out.
 - `Alt+Tab` should cycle windows and `Alt+N` should switch workspaces, which is
   easier to reach than the `Mod4+N` equivalents.
 - Login no longer opens Obsidian on workspace 3.
+- Shutting down from the power menu can now keep the desktop: answering **Yes**
+  saves every workspace/tab/app and the next login puts them all back, answering
+  **No** (the default) behaves exactly like before.
 - Fonts and cursor sizing are tuned a bit more for the small screen setup.
