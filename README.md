@@ -19,16 +19,18 @@ trail support, Fastfetch startup output, and Starship timeout tuning.
 
 ### Session save & restore
 
-- `Mod4+p` → **Shutdown** or **Reboot** now asks:
+- `Mod4+p` → **Shutdown**, **Reboot** or **Logout** now asks:
 
   ```text
   Save this session before shutting down?
 
-  Yes — save now, restore automatically at the next login
-  No  — shut down normally, nothing is saved (default)
+  No  — just proceed without saving
+  Yes — save now, restore automatically at the next login (default)
+  Cancel — back to the desktop, nothing happens
   ```
 
-  The dialog defaults to **No**: Enter or Escape shuts down exactly like before.
+  The dialog defaults to **Yes**: Enter saves and proceeds. Escape or Cancel
+  aborts completely (the PC stays on).
 - Answering **Yes** writes `~/.local/state/i3-session/`:
   - `session.json` — workspaces, windows, focus and one launch recipe per app,
   - `layouts/ws-*.json` — `i3-save-tree` dumps with `class`/`instance` swallow
@@ -40,6 +42,12 @@ trail support, Fastfetch startup output, and Starship timeout tuning.
     Chromium plus their `--restore-last-session` launch recipe,
   - `pending` — the flag that makes the next login restore the session.
 - Answering **No** clears that flag, so a stale save can never surprise a boot.
+- **Crash safety**: `i3/scripts/battery-snapshot.sh` (systemd user timer,
+  every 2 min) quietly snapshots the session in the background — at most every
+  15 min on AC power, every 5 min on battery, and every minute below 10%
+  battery. If the power cuts out, the battery dies or the laptop hangs, the
+  snapshot's `pending` flag makes the next boot restore everything; a
+  deliberate **No** at the power menu clears it again.
 - At the next login `startup-session.sh` focuses each saved workspace, appends
   its layout (i3 plants placeholder windows), relaunches the apps so i3 swallows
   them into those placeholders, moves any window that landed on the wrong

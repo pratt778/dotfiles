@@ -49,6 +49,7 @@ HOME = Path.home()
 DEFAULT_STATE = HOME / ".local/state/i3-session"
 STATE_DIR = Path(os.environ.get("I3_SESSION_STATE") or DEFAULT_STATE)
 LOG_FILE: Path | None = None
+QUIET: bool = False
 
 # Shells are never "the program to relaunch": the terminal already starts one.
 SHELL_NAMES = {"sh", "bash", "zsh", "fish", "dash", "ksh", "nu", "csh", "tcsh"}
@@ -73,14 +74,19 @@ UNSAFE_CMD_RE = re.compile(
 CHROMIUM_FAMILY = {
     "brave-browser": ("brave-browser", "BraveSoftware/Brave-Browser"),
     "brave": ("brave-browser", "BraveSoftware/Brave-Browser"),
+    "com.brave.browser": ("brave-browser", "BraveSoftware/Brave-Browser"),
     "chromium": ("chromium", "chromium"),
     "chromium-browser": ("chromium", "chromium"),
+    "org.chromium.chromium": ("chromium", "chromium"),
     "google-chrome": ("google-chrome", "google-chrome"),
     "google-chrome-stable": ("google-chrome", "google-chrome"),
+    "com.google.chrome": ("google-chrome", "google-chrome"),
     "microsoft-edge": ("microsoft-edge", "microsoft-edge"),
     "microsoft-edge-stable": ("microsoft-edge", "microsoft-edge"),
+    "com.microsoft.edge": ("microsoft-edge", "microsoft-edge"),
     "vivaldi": ("vivaldi", "vivaldi"),
     "vivaldi-stable": ("vivaldi", "vivaldi"),
+    "com.vivaldi.vivaldi": ("vivaldi", "vivaldi"),
 }
 CHROMIUM_SESSION_FILES = (
     "Current Session",
@@ -104,7 +110,8 @@ def start_log(name: str) -> None:
 
 def log(msg: str) -> None:
     line = "[%s] %s" % (datetime.now().strftime("%H:%M:%S"), msg)
-    print(line, flush=True)
+    if not QUIET:
+        print(line, flush=True)
     if LOG_FILE:
         try:
             with open(LOG_FILE, "a", encoding="utf-8") as fh:
@@ -227,13 +234,17 @@ def xprop_pid(win_id: int) -> int | None:
 def flatpak_pid_map() -> dict[int, str]:
     """Map pid -> flatpak application id for every running flatpak app."""
     out: dict[int, str] = {}
-    res = run(["flatpak", "ps", "--columns=instance,pid"])
+    # NOTE: the first column must be `application`, not `instance`: instance is
+    # a random numeric id and using it produced `flatpak run 1927242352` (which
+    # can never work) plus a nonsense ~/.var/app/<number>/ profile path. That is
+    # why flatpak windows (Chromium!) were never restored.
+    res = run(["flatpak", "ps", "--columns=application,pid"])
     for line in res.stdout.splitlines():
         parts = line.split()
         if len(parts) < 2:
             continue
         app_id, pid = parts[0], parts[1].rstrip("?")
-        if pid.isdigit():
+        if pid.isdigit() and "." in app_id:
             out.setdefault(int(pid), app_id)
     return out
 
@@ -567,7 +578,11 @@ def firefox_restore(payload: dict) -> str | None:
 def chromium_info(win: dict, flatpak_map: dict[int, str]) -> dict | None:
     """Work out browser/profile/location for a Chromium-based window."""
     cls = (win.get("class") or "").lower()
-    key = next((c for c in CHROMIUM_FAMILY if cls == c or cls.startswith(c)), None)
+    # Match `chromium` (WM_CLASS "Chromium") but also reverse-DNS flatpak
+    # classes such as `org.chromium.chromium` (WM_CLASS "Org.chromium.Chromium")
+    # or `com.brave.browser`, which are what flatpak builds actually report.
+    key = next((c for c in CHROMIUM_FAMILY
+                if cls == c or cls.startswith(c) or c in cls), None)
     if not key:
         return None
     binary, rel_root = CHROMIUM_FAMILY[key]
@@ -580,6 +595,16 @@ def chromium_info(win: dict, flatpak_map: dict[int, str]) -> dict | None:
         elif arg.startswith("--user-data-dir="):
             user_data_dir = arg.split("=", 1)[1]
     app_id = find_flatpak_app(win.get("pid"), flatpak_map)
+    if not app_id:
+        # Flatpak browsers write _NET_WM_PID from inside their sandbox
+        # (Chromium reports pid 2), so the pid walk can miss. Flatpak exports
+        # set WM_CLASS/instance to the app id, so match against the running
+        # flatpaks by name instead.
+        candidate = ((win.get("instance") or "").lower()) or cls
+        for running in flatpak_map.values():
+            if running.lower() == candidate:
+                app_id = running
+                break
     if app_id:
         root = HOME / ".var/app" / app_id / "config" / rel_root
         cmd = ["flatpak", "run", app_id, "--restore-last-session",
@@ -598,17 +623,35 @@ def chromium_info(win: dict, flatpak_map: dict[int, str]) -> dict | None:
 
 
 def chromium_save(payload: dict, dest: Path) -> dict:
-    """Copy Chrome's `Sessions` folder (plus any legacy session files)."""
+    """Copy Chrome's `Sessions` folder (plus any legacy session files).
+
+    Best effort on purpose: this also runs from background auto-saves while the
+    browser is alive and rewriting those very files, so a single unreadable file
+    must never abort the whole snapshot.
+    """
     profile = Path(payload.get("profile") or "")
     dest.mkdir(parents=True, exist_ok=True)
     copied: list[str] = []
     if (profile / "Sessions").is_dir():
-        shutil.copytree(profile / "Sessions", dest / "Sessions", dirs_exist_ok=True)
-        copied.append("Sessions")
+        try:
+            shutil.copytree(profile / "Sessions", dest / "Sessions", dirs_exist_ok=True)
+            copied.append("Sessions")
+        except OSError:
+            target = dest / "Sessions"
+            target.mkdir(parents=True, exist_ok=True)
+            for item in sorted((profile / "Sessions").iterdir()):
+                try:
+                    shutil.copy2(item, target / item.name)
+                    copied.append("Sessions/" + item.name)
+                except OSError:
+                    continue
     for name in CHROMIUM_SESSION_FILES:
-        if (profile / name).is_file():
-            shutil.copy2(profile / name, dest / name)
-            copied.append(name)
+        try:
+            if (profile / name).is_file():
+                shutil.copy2(profile / name, dest / name)
+                copied.append(name)
+        except OSError:
+            continue
     return {"profile": str(profile), "dir": str(dest), "files": copied}
 
 
@@ -1250,7 +1293,7 @@ def clear_session(purge: bool = False) -> int:
 
 
 def main(argv=None) -> int:
-    global STATE_DIR
+    global STATE_DIR, QUIET
     parser = argparse.ArgumentParser(
         prog="session_lib.py",
         description="Save/restore the exact i3 session (workspaces, layout, apps).")
@@ -1261,7 +1304,12 @@ def main(argv=None) -> int:
     parser.add_argument("--no-reconcile", action="store_true",
                         help="do not move windows between workspaces while restoring")
     parser.add_argument("--purge", action="store_true", help="with clear: delete the saved data too")
+    parser.add_argument("--quiet", action="store_true",
+                        help="log to file only (used by background auto-saves)")
     args = parser.parse_args(argv)
+
+    if args.quiet:
+        QUIET = True
 
     if args.state_dir:
         STATE_DIR = Path(args.state_dir)

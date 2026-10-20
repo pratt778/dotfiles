@@ -30,7 +30,7 @@ esac
 
 # Ask with a 3-button card prompt:
 # [No, just proceed] [Yes, save session] [Cancel]
-# - Default selected: "No, just proceed" (pressing Enter proceeds without saving)
+# - Default selected: "Yes, save session" (row 1) - Enter saves and proceeds.
 # - Escape / clicking Cancel: aborts completely and returns to desktop!
 ask_rofi() {
     local choice ret
@@ -43,7 +43,7 @@ ask_rofi() {
         'Yes, save session\0icon\x1fdocument-save\n' \
         'Cancel\0icon\x1fwindow-close\n' |
         rofi -dmenu -i -no-custom -only-match \
-            -selected-row 0 -show-icons \
+            -selected-row 1 -show-icons \
             -p "Save session?" \
             -mesg "Reopen these exact tabs and workspaces next time?" \
             -theme "$theme" \

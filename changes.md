@@ -134,12 +134,18 @@ and out.
 
 ### `i3/scripts/session_*` and `rofi/powermenu.sh`
 
-`Mod4+p` → Shutdown/Reboot now asks **"Save this session before shutting down?"**
-with **No** as the default answer (Enter/Escape shuts down as before).
+`Mod4+p` → Shutdown/Reboot/Logout now asks **"Save this session before shutting down?"**
+with **Yes** as the default answer (Enter saves & proceeds; Escape/Cancel aborts).
 
-- `power-session.sh` shows the question (`zenity`, `rofi` fallback, default No),
-  runs `session-save.sh` when the answer is Yes, clears the stale `pending` flag
-  when it is No, and then performs `systemctl poweroff|reboot`.
+- `power-session.sh` shows the question (rofi 3-card prompt, `zenity` fallback,
+  default **Yes**), runs `session-save.sh` when the answer is Yes, clears the
+  stale `pending` flag when it is No, and then performs
+  `systemctl poweroff|reboot` or `loginctl terminate-user` (Logout was routed
+  through the same prompt).
+- `battery-snapshot.sh` + the `i3-battery-snapshot.timer` user timer provide
+  crash safety: throttled background auto-saves (15 min on AC, 5 min on battery,
+  1 min below 10%) so a power cut, dead battery or hang still restores at the
+  next boot.
 - `session_lib.py save` records the exact desktop:
   - `i3-save-tree` per workspace with `class`/`instance` swallow criteria,
   - one launch recipe per window: kitty session file (tabs/splits/cwd), Firefox
@@ -175,5 +181,11 @@ with **No** as the default answer (Enter/Escape shuts down as before).
 - Login no longer opens Obsidian on workspace 3.
 - Shutting down from the power menu can now keep the desktop: answering **Yes**
   saves every workspace/tab/app and the next login puts them all back, answering
-  **No** (the default) behaves exactly like before.
+  **No** behaves exactly like before, **Cancel**/Escape keeps the PC running.
+  Yes is the default; background auto-saves cover sudden power loss.
+- Flatpak Chromium windows are restored properly again: their WM_CLASS
+  (`Org.chromium.Chromium`) is recognised as the Chromium family and their
+  sandbox pid (`_NET_WM_PID = 2`) no longer breaks flatpak detection — the
+  launch uses `flatpak run org.chromium.Chromium --restore-last-session` with
+  the real `~/.var/app/...` profile.
 - Fonts and cursor sizing are tuned a bit more for the small screen setup.

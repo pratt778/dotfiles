@@ -52,8 +52,7 @@ case $chosen in
         exit 0
         ;;
     "Logout")
-        loginctl terminate-user $USER
-        exit 0
+        exec "$HOME/.config/i3/scripts/power-session.sh" logout
         ;;
     *)
         exit 0
