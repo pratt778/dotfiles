@@ -34,9 +34,9 @@ return {
           style = 'underline',
         },
 
-        diagnostics = false,
+        diagnostics = 'nvim_lsp',
         always_show_bufferline = false,
-        -- diagnostics_update_on_insert = true,
+        diagnostics_update_on_insert = true,
         diagnostics_indicator = function(_, _, diag)
           local icons = {
             Error = ' ', -- Alternative: ✖, ❌
@@ -51,6 +51,12 @@ return {
         seperator_style = 'slant',
 
         offsets = {
+          {
+            filetype = 'neo-tree',
+            text = 'File Explorer',
+            highlight = 'Directory',
+            text_align = 'left',
+          },
           {
             filetype = 'custom_layout_box',
           },

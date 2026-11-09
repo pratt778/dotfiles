@@ -26,7 +26,7 @@ return {
           end
         end
         if tree_win then
-          pcall(vim.api.nvim_win_close, tree_win, true)
+          require('neo-tree.command').execute { action = 'close' }
           return
         end
         local prev = vim.api.nvim_get_current_win()
@@ -43,14 +43,38 @@ return {
       desc = 'NeoTree toggle sidebar',
       silent = true,
     },
+    {
+      '<leader>ee',
+      function()
+        require('neo-tree.command').execute {
+          action = 'focus',
+          source = 'filesystem',
+          position = 'left',
+          dir = vim.fn.getcwd(),
+        }
+      end,
+      desc = 'Focus File Explorer',
+    },
   },
   opts = {
     close_if_last_window = true,
     popup_border_style = 'rounded',
+    enable_diagnostics = true,
     default_component_configs = {
       -- Clean, VSCode-like rows: no size/type/date columns
       diagnostics = {
-        symbols = { error = ' ', warn = ' ', hint = ' ', info = ' ' },
+        symbols = {
+          error = ' ',
+          warn = ' ',
+          info = ' ',
+          hint = '󰌵 ',
+        },
+        highlights = {
+          hint = 'DiagnosticSignHint',
+          info = 'DiagnosticSignInfo',
+          warn = 'DiagnosticSignWarn',
+          error = 'DiagnosticSignError',
+        },
       },
       git_status = {
         symbols = {
@@ -82,6 +106,8 @@ return {
         width = 30,
         mappings = {
           ['\\'] = 'close_window',
+          ['q'] = 'close_window',
+          ['<esc>'] = 'close_window',
           -- VSCode-style navigation
           ['<cr>'] = 'open',
           ['l'] = 'open',        -- expand folder / open file

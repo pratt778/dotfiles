@@ -66,8 +66,10 @@ local function new_file_prompt()
     default_dir = vim.fs.dirname(current)
   else
     default_dir = vim.fn.getcwd()
-    if vim.fn.filereadable(default_dir .. '/pubspec.yaml') == 1 then
+    if vim.fn.filereadable(default_dir .. '/pubspec.yaml') == 1 and vim.fn.isdirectory(default_dir .. '/lib') == 1 then
       default_dir = default_dir .. '/lib'
+    elseif vim.fn.filereadable(default_dir .. '/Cargo.toml') == 1 and vim.fn.isdirectory(default_dir .. '/src') == 1 then
+      default_dir = default_dir .. '/src'
     end
   end
 
@@ -136,6 +138,17 @@ vim.keymap.set('i', '<C-e>', function()
   vim.schedule(open_file_explorer)
 end, { desc = 'File explorer' })
 
+-- ── VSCode-style Ctrl+Click Go to Definition & Back/Forward ──────────────
+-- Hold Ctrl and left-click any class/function/variable to jump straight to its definition.
+vim.keymap.set('n', '<C-LeftMouse>', '<LeftMouse><cmd>lua vim.lsp.buf.definition()<CR>', { desc = 'Go to definition (Ctrl+Click)' })
+vim.keymap.set('i', '<C-LeftMouse>', '<Esc><LeftMouse><cmd>lua vim.lsp.buf.definition()<CR>', { desc = 'Go to definition (Ctrl+Click)' })
+
+-- Alt+Left to go back (VSCode Navigate Back) / Alt+Right forward
+vim.keymap.set('n', '<A-Left>', '<C-t>', { desc = 'Jump back from definition (VSCode Alt+Left)' })
+vim.keymap.set('i', '<A-Left>', '<Esc><C-t>', { desc = 'Jump back from definition (VSCode Alt+Left)' })
+vim.keymap.set('n', '<A-Right>', '<cmd>execute "normal! \\<C-i>"<CR>', { desc = 'Jump forward' })
+
+
 local function selected_text()
   local saved_text = vim.fn.getreg('z')
   local saved_type = vim.fn.getregtype('z')
@@ -147,15 +160,25 @@ local function selected_text()
   return text:gsub('\n', '\\n')
 end
 
+-- Escape string for literal Vim search/replace using \V (very nomagic)
+local function vim_literal_search_pattern(text)
+  return [[\V]] .. vim.fn.escape(text, [[/\]])
+end
+
 local function search_prompt(default)
   local query = vim.fn.input('Find: ', default or vim.fn.expand '<cword>')
   if query == '' then
     return
   end
 
-  vim.fn.setreg('/', vim.pesc(query))
+  local pattern = vim_literal_search_pattern(query)
+  vim.fn.setreg('/', pattern)
+  vim.fn.histadd('search', pattern)
   vim.opt.hlsearch = true
-  vim.cmd 'normal! n'
+  local ok = pcall(vim.cmd, 'normal! n')
+  if not ok then
+    vim.notify('Pattern not found: ' .. query, vim.log.levels.WARN)
+  end
 end
 
 local function replace_prompt(replace_all, default)
@@ -165,11 +188,14 @@ local function replace_prompt(replace_all, default)
   end
 
   local replacement = vim.fn.input('Replace with: ')
-  local pattern = vim.fn.escape(vim.pesc(query), '/')
-  local escaped_replacement = vim.fn.escape(replacement, '/\\&')
+  local pattern = vim_literal_search_pattern(query)
+  local escaped_replacement = vim.fn.escape(replacement, [[/\]] .. '&')
   local flags = replace_all and 'g' or 'gc'
 
-  vim.cmd('%s/' .. pattern .. '/' .. escaped_replacement .. '/' .. flags)
+  local ok, err = pcall(vim.cmd, string.format('%%s/%s/%s/%s', pattern, escaped_replacement, flags))
+  if not ok and err and err:find('E486') then
+    vim.notify('Pattern not found: ' .. query, vim.log.levels.WARN)
+  end
 end
 
 vim.keymap.set('n', '<C-f>', function()
@@ -221,8 +247,8 @@ local function project_grep_replace()
     return
   end
 
-  -- 1. Find every match (ripgrep, same engine as <leader>sg)
-  local results = vim.fn.systemlist { 'rg', '--vimgrep', '--smart-case', '--', search }
+  -- 1. Find every match (ripgrep, exact literal search with -F)
+  local results = vim.fn.systemlist { 'rg', '--vimgrep', '--smart-case', '-F', '--', search }
   if vim.v.shell_error ~= 0 or #results == 0 then
     vim.notify('No matches for "' .. search .. '" in the project', vim.log.levels.WARN)
     return
@@ -237,8 +263,8 @@ local function project_grep_replace()
     return
   end
 
-  local pattern = vim.fn.escape(vim.pesc(search), '/')
-  local escaped = vim.fn.escape(replacement, '/\\&')
+  local pattern = vim_literal_search_pattern(search)
+  local escaped = vim.fn.escape(replacement, [[/\]] .. '&')
 
   -- 3. Replace across every file in the quickfix list
   vim.cmd('silent! cfdo %s/' .. pattern .. '/' .. escaped .. '/g')

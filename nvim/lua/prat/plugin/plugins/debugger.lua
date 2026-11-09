@@ -62,6 +62,13 @@ return {
       desc = 'Debug: Toggle Breakpoint',
     },
     {
+      '<leader>db',
+      function()
+        require('dap').toggle_breakpoint()
+      end,
+      desc = 'Debug: Toggle Breakpoint',
+    },
+    {
       '<leader>B',
       function()
         require('dap').set_breakpoint(vim.fn.input 'Breakpoint condition: ')
@@ -109,6 +116,7 @@ return {
       ensure_installed = {
         -- Update this to ensure that you have the debuggers for the langs you want
         'delve',
+        'codelldb',
       },
     }
 
@@ -180,5 +188,18 @@ return {
     --     detached = vim.fn.has 'win32' == 0,
     --   },
     -- }
+    -- Rust debugging configuration
+    dap.configurations.rust = dap.configurations.rust or {
+      {
+        name = 'Launch Rust binary',
+        type = 'codelldb',
+        request = 'launch',
+        program = function()
+          return vim.fn.input('Path to executable: ', vim.fn.getcwd() .. '/target/debug/', 'file')
+        end,
+        cwd = '${workspaceFolder}',
+        stopOnEntry = false,
+      },
+    }
   end,
 }

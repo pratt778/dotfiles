@@ -35,7 +35,7 @@ return { -- Autoformat
       typescript = { 'prettierd' },
       javascriptreact = { 'prettierd', 'rustywind' },
       typescriptreact = { 'prettierd', 'rustywind' },
-      jasonc = { 'prettierd' },
+      jsonc = { 'prettierd' },
       svelte = { 'prettierd' },
       css = { 'prettierd' },
       html = { 'prettierd' },
@@ -46,6 +46,8 @@ return { -- Autoformat
       liquid = { 'prettierd' },
       python = { 'black', 'isort' },
       kotlin = { 'ktfmt' },
+      dart = { 'dart_format' },
+      rust = { 'rustfmt', lsp_format = 'fallback' },
       --
       -- You can use 'stop_after_first' to run the first available formatter from the list
       -- javascript = { "prettierd", "prettier", stop_after_first = true },

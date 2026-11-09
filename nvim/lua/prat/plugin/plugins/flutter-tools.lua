@@ -1,24 +1,43 @@
 return {
   'akinsho/flutter-tools.nvim',
-  ft = 'dart',
+  lazy = false,
   dependencies = {
     'nvim-lua/plenary.nvim',
     'stevearc/dressing.nvim',
     'mfussenegger/nvim-dap',
   },
   config = function()
+    -- Guard for Neovim 0.12+ strict validation in nvim_echo where plugins
+    -- pass an unsupported `source` key in opts.
+    local orig_echo = vim.api.nvim_echo
+    vim.api.nvim_echo = function(chunks, history, opts)
+      if opts and opts.source ~= nil then
+        opts = vim.deepcopy(opts)
+        opts.source = nil
+      end
+      return orig_echo(chunks, history, opts)
+    end
+
+    local capabilities = vim.lsp.protocol.make_client_capabilities()
+    local ok_cmp, cmp_lsp = pcall(require, 'cmp_nvim_lsp')
+    if ok_cmp then
+      capabilities = vim.tbl_deep_extend('force', capabilities, cmp_lsp.default_capabilities())
+    end
+
     require('flutter-tools').setup {
       lsp = {
         color = {
-          enable = true,
+          enabled = true,
           foreground = true,
         },
+        capabilities = capabilities,
       },
       debugger = {
         enabled = true,
-        run_via_dap = true,
         register_configurations = function(paths)
-          require('dap.ext.vscode').load_launchjs()
+          pcall(function()
+            require('dap.ext.vscode').load_launchjs()
+          end)
         end,
       },
       dev_log = {
@@ -103,11 +122,16 @@ return {
     local status_timer = uv.new_timer()
     status_timer:start(1500, 1500, vim.schedule_wrap(function()
       local log_buf
-      for _, b in ipairs(vim.api.nvim_list_bufs()) do
-        local name = vim.api.nvim_buf_get_name(b)
-        if name:find('flutter-tools', 1, true) and name:find('log', 1, true) then
-          log_buf = b
-          break
+      local ok_log, ft_log = pcall(require, 'flutter-tools.log')
+      if ok_log and ft_log.buf and vim.api.nvim_buf_is_valid(ft_log.buf) then
+        log_buf = ft_log.buf
+      else
+        for _, b in ipairs(vim.api.nvim_list_bufs()) do
+          local name = vim.api.nvim_buf_get_name(b)
+          if name:find('__FLUTTER_DEV_LOG__', 1, true) or (name:lower():find('flutter') and name:lower():find('log')) then
+            log_buf = b
+            break
+          end
         end
       end
       if not log_buf or not vim.api.nvim_buf_is_loaded(log_buf) then
@@ -166,7 +190,9 @@ return {
         { '📱 Select Device', 'FlutterDevices' },
         { '🎮 Emulators', 'FlutterEmulators' },
         { '📋 Toggle Logs', 'FlutterLogToggle' },
-        { '🌐 DevTools', 'FlutterDevTools' },
+        { '🌐 DevTools (Browser)', 'FlutterDevTools' },
+        { '🌲 Widget Tree / Outline', 'FlutterOutlineToggle' },
+        { '🎨 Toggle Visual Debug', 'FlutterVisualDebug' },
         { '🛑 Quit App', flutter_cmd_with_status('FlutterQuit', 'stopped', 'flutter quit') },
       }
 
@@ -203,9 +229,9 @@ return {
 
     vim.keymap.set('n', '<leader>fl', custom_flutter_picker, { desc = 'flutter tools' })
     vim.keymap.set('n', '<leader>fd', '<cmd>FlutterLogToggle<CR>', { desc = 'flutter logs' })
-
-    -- Hot Restart: <Alt+e> (recompiles and restarts the app)
-    vim.keymap.set('n', '<A-e>', '<cmd>FlutterRestart<CR>', { desc = 'Flutter: Hot Restart' })
+    vim.keymap.set('n', '<leader>fo', '<cmd>FlutterOutlineToggle<CR>', { desc = 'Flutter: Widget tree outline' })
+    vim.keymap.set('n', '<leader>fw', '<cmd>FlutterDevTools<CR>', { desc = 'Flutter: DevTools & Inspector' })
+    vim.keymap.set('n', '<leader>fv', '<cmd>FlutterVisualDebug<CR>', { desc = 'Flutter: Visual debug guidelines' })
 
     -- Save + Hot Reload: <Alt+o> (writes the file, then reloads the running app)
     local function save_and_hot_reload()
@@ -223,7 +249,8 @@ return {
       save_and_hot_reload()
     end, { desc = 'Flutter: Save + Hot Reload' })
 
-    vim.keymap.set('n', '<A-e>', function()
+    -- Hot Restart: <Alt+e> (recompiles and restarts the app)
+    vim.keymap.set({ 'n', 'i' }, '<A-e>', function()
       set_flutter_state('building', 'hot restart (Alt+e)')
       vim.cmd 'FlutterRestart'
     end, { desc = 'Flutter: Hot Restart' })

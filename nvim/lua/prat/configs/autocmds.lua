@@ -1,6 +1,17 @@
 -- [[ Basic Autocommands ]]
 --  See `:help lua-guide-autocommands`
 
+-- Guard for Neovim 0.12+ strict validation in nvim_echo where plugins
+-- (such as flutter-tools) pass an unsupported `source` key in opts.
+local orig_echo = vim.api.nvim_echo
+vim.api.nvim_echo = function(chunks, history, opts)
+  if opts and opts.source ~= nil then
+    opts = vim.deepcopy(opts)
+    opts.source = nil
+  end
+  return orig_echo(chunks, history, opts)
+end
+
 -- Disable netrw: directories are handled below (restore session + tree).
 vim.g.loaded_netrw = 1
 vim.g.loaded_netrwPlugin = 1
@@ -44,17 +55,26 @@ vim.api.nvim_create_autocmd('VimEnter', {
       if file_buf then
         -- Your file takes the main window; tree becomes a left sidebar
         vim.api.nvim_win_set_buf(0, file_buf)
-        -- Close any tree windows the session restored — we open exactly ONE
-        -- (collect first, then close: never mutate while iterating windows)
+        -- Close any tree windows and wipe any tree buffers the session restored — we open exactly ONE clean instance
         local restored_trees = {}
         for _, w in ipairs(vim.api.nvim_list_wins()) do
-          if vim.api.nvim_buf_get_name(vim.api.nvim_win_get_buf(w)):find('neo%-tree') then
+          local b = vim.api.nvim_win_get_buf(w)
+          if vim.api.nvim_buf_get_name(b):find('neo%-tree') or vim.bo[b].filetype == 'neo-tree' then
             table.insert(restored_trees, w)
           end
         end
         for _, w in ipairs(restored_trees) do
           if vim.api.nvim_win_is_valid(w) then
             pcall(vim.api.nvim_win_close, w, true)
+          end
+        end
+        -- Wipe any neo-tree buffers lingering in memory so name collisions never happen
+        for _, b in ipairs(vim.api.nvim_list_bufs()) do
+          if vim.api.nvim_buf_is_valid(b) then
+            local name = vim.api.nvim_buf_get_name(b)
+            if name:find('neo%-tree') or vim.bo[b].filetype == 'neo-tree' then
+              pcall(vim.api.nvim_buf_delete, b, { force = true })
+            end
           end
         end
         local show_ok, show_err = pcall(function()
@@ -140,5 +160,19 @@ vim.api.nvim_create_autocmd('TextYankPost', {
   group = vim.api.nvim_create_augroup('kickstart-highlight-yank', { clear = true }),
   callback = function()
     vim.highlight.on_yank()
+  end,
+})
+
+-- Close Neo-tree cleanly before saving sessions so it is never serialized into session files
+vim.api.nvim_create_autocmd({ 'User', 'VimLeavePre' }, {
+  desc = 'Close Neo-tree before saving session',
+  group = vim.api.nvim_create_augroup('prat-neotree-session-clean', { clear = true }),
+  callback = function(ev)
+    if ev.event == 'User' and ev.match ~= 'PersistenceSavePre' then
+      return
+    end
+    pcall(function()
+      require('neo-tree.command').execute { action = 'close' }
+    end)
   end,
 })
