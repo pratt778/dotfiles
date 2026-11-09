@@ -1,127 +1,59 @@
-# Neovim Config — prat
+# NVIM config
 
-A minimal, Python-focused Neovim setup built on kickstart.nvim using the
-built-in `vim.pack` plugin manager. Clean, fast, and lightweight for machine running EndeavourOS.
+Config for my neovim workflow. This setup is a custom build optimized for speed, aesthetics, and professional development (specifically Flutter/Dart and Lua).
 
----
+## 🚀 Key Features
+- **Plugin Manager:** [lazy.nvim](https://github.com/folke/lazy.nvim)
+- **UI & Aesthetics:** TokyoNight theme, Snacks.nvim for dashboard/indents, and Bufferline.
+- **Development:** Full LSP support via Mason, Autocompletion (nvim-cmp), and Formatting (Conform).
+- **Navigation:** Telescope for fuzzy finding and Flash.nvim for "teleportation."
+- **Debugging:** Integrated debugger with DAP and specialized Flutter tools.
 
-## Plugins
+## 🔌 Plugin Breakdown
 
-| Plugin | Purpose |
-|---|---|
-| `tokyonight.nvim` | Dark colorscheme |
-| `which-key.nvim` | Keybind popup menu on Space |
-| `telescope.nvim` | Fuzzy file/text search |
-| `nvim-lspconfig` + `pyright` | Python LSP — autocomplete, errors |
-| `mason.nvim` | LSP/tool installer |
-| `blink.cmp` | Autocomplete engine |
-| `nvim-treesitter` | Syntax highlighting |
-| `gitsigns.nvim` | Git diff signs in gutter |
-| `conform.nvim` | Code formatter |
-| `todo-comments.nvim` | Highlights TODO/FIX/WARN |
-| `mini.nvim` | Surround, AI, statusline, files, starter |
-| `bufferline.nvim` | Tabs at the top |
-| `snacks.nvim` | Indent guides, smooth scroll, notifications |
-| `fidget.nvim` | LSP loading spinner |
-| `LuaSnip` | Snippet engine |
-| `nvim-autopairs` | Auto close brackets and quotes |
+### 🛠️ Core Infrastructure & UI
+- **lazy.nvim**: The core plugin manager that keeps startup times ultra-fast.
+- **snacks.nvim**: A multi-tool providing the dashboard, indent lines, smooth scrolling, and notifications.
+- **which-key.nvim**: Interactive cheat sheet for all your keybindings.
+- **tokyonight.nvim**: The primary high-contrast, eye-friendly colorscheme.
+- **dressing.nvim**: Modernizes the look of all default Neovim inputs and selection menus.
 
----
+### 🧠 Intelligence (LSP & Autocomplete)
+- **nvim-lspconfig**: Bridge to Language Servers for IDE-like features.
+- **mason.nvim**: In-editor package manager for LSPs, formatters, and debuggers.
+- **nvim-cmp**: High-performance completion engine with multiple sources (LSP, path, buffer).
+- **lspkind.nvim**: Adds intuitive icons to the completion menu.
+- **lazydev.nvim**: Specialized intelligence for writing Neovim/Lua configurations.
+- **fidget.nvim**: Visual status updates for LSP background tasks.
 
-## Keybindings
+### 📝 Editing & Coding Efficiency
+- **nvim-treesitter**: Advanced code parsing for superior syntax highlighting and structural awareness.
+- **mini.surround / mini.ai**: Quick manipulation of surrounding characters and intelligent text objects.
+- **nvim-autopairs**: Automatic bracket and quote completion.
+- **conform.nvim**: Powerful auto-formatting on save.
+- **nvim-lint**: Real-time code analysis and linting.
+- **todo-comments.nvim**: Highlights keywords like `TODO` and `FIXME`.
+- **LuaSnip**: Robust snippet engine for rapid boilerplate expansion.
 
-### General
-| Key | Action |
-|---|---|
-| `i` | Enter insert mode |
-| `;;` | Exit insert mode |
-| `Ctrl+S` | Save file |
-| `Ctrl+A` | Select all |
-| `Ctrl+C` | Copy |
-| `Ctrl+V` | Paste |
-| `Ctrl+Z` | Undo |
-| `Ctrl+F` | Search in file |
-| `Space+R` | Run Python file |
-| `Space+K` | Kill running program |
-| `Esc+Esc` | Close terminal |
+### 🔍 Navigation & Search
+- **telescope.nvim**: The central hub for searching files, text, and Git history.
+- **flash.nvim**: Lightning-fast cursor movement to any visible text.
+- **mini.files**: Modern, text-based file explorer for rapid file system manipulation.
+- **vim-tmux-navigator**: Seamless switching between Neovim and Tmux windows.
 
-### Navigation
-| Key | Action |
-|---|---|
-| `Space+E` | Open file explorer |
-| `Space+SF` | Find files (Telescope) |
-| `Space+SG` | Live grep search |
-| `Space+S.` | Recent files |
-| `Shift+H` | Previous buffer/tab |
-| `Shift+L` | Next buffer/tab |
-| `Ctrl+H/J/K/L` | Move between splits |
+### 📂 Project Management & Git
+- **bufferline.nvim**: Visual tab bar for managing open buffers.
+- **mini.statusline**: Minimalist status bar at the bottom.
+- **gitsigns.nvim**: Visual indicators for Git changes directly in the sign column.
+- **persistence.nvim**: Automated session management to pick up where you left off.
+- **trouble.nvim**: A beautiful project-wide view for errors and diagnostics.
 
-### Editing
-| Key | Action |
-|---|---|
-| `Alt+Up/Down` | Move line up/down |
-| `Alt+Shift+Down` | Duplicate line |
-| `> / <` (visual) | Indent / unindent |
-| `Space+F` | Format buffer |
-| `Space+R` | Search and replace word under cursor |
-| `/word` then `n/N` | Search and cycle matches |
-| `:%s/old/new/g` | Find and replace all |
-
-### LSP
-| Key | Action |
-|---|---|
-| `grn` | Rename variable |
-| `gra` | Code action |
-| `grd` | Go to definition |
-| `grr` | Go to references |
-| `Space+SD` | Search diagnostics |
+### 🐛 Debugging & Specialized Tools
+- **nvim-dap / nvim-dap-ui**: Full debugger integration with a professional UI.
+- **flutter-tools.nvim**: Deep integration for Flutter development (Hot Reload, DevTools).
+- **obsidian.nvim**: Tools for managing personal knowledge bases within Neovim.
 
 ---
 
-## Setup
-
-### Requirements
-```bash
-sudo pacman -S neovim tree-sitter-cli python-lsp-server
-pip install python-lsp-server[all] --break-system-packages
-```
-
-### Install
-```bash
-# Remove old config if any
-rm -rf ~/.config/nvim
-rm -rf ~/.local/share/nvim
-
-# Clone kickstart
-git clone https://github.com/nvim-lua/kickstart.nvim.git ~/.config/nvim
-
-# Open nvim — plugins install automatically
-nvim
-
-# Install Python LSP inside nvim
-:MasonInstall pyright
-```
-
-### Python LSP
-Make sure `pyright` is uncommented in `init.lua`:
-```lua
-local servers = {
-  pyright = {},
-  lua_ls = { ... },
-}
-```
-
----
-
-## Dashboard
-Opens automatically when you run `nvim` without a file. Built with `mini.starter`.
-
----
-
-## File Structure
-```
-~/.config/nvim/
-└── init.lua        # single file config, everything is here
-```
-
----
+## Based on KICKSTART.NVIM
+- [THE OLD README](README_OLD.md)
