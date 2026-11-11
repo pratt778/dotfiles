@@ -16,21 +16,24 @@ end
 vim.g.loaded_netrw = 1
 vim.g.loaded_netrwPlugin = 1
 
--- `nvim .` = pick up where you left off: restore the last session (your
--- previous file opens) and show the project tree as a sidebar.
--- NOTE: with netrw disabled, BufEnter does NOT fire for directory buffers,
--- so this hooks VimEnter and takes the directory from the current buffer.
+-- `nvim .` or `nvim` (no file args) = pick up where you left off: restore the
+-- last session (your previous file opens) and show the project tree as a sidebar.
 vim.api.nvim_create_autocmd('VimEnter', {
-  desc = 'nvim <dir>: restore this project session and show tree',
+  desc = 'nvim or nvim <dir>: restore this project session and show tree',
   group = vim.api.nvim_create_augroup('prat-dir-restore-session', { clear = true }),
   callback = function()
-    -- argv() can be empty inside VimEnter; the opened directory buffer is
-    -- the reliable source (it is the current buffer at this point).
+    local is_dir = false
     local dir = vim.api.nvim_buf_get_name(0)
-    if dir == '' or vim.fn.isdirectory(dir) ~= 1 then
+    if dir ~= '' and vim.fn.isdirectory(dir) == 1 then
+      is_dir = true
+      vim.cmd.cd(vim.fn.fnameescape(dir))
+    end
+
+    -- If a specific file was passed (e.g. `nvim main.dart`), do not hijack with session
+    if not is_dir and vim.fn.argc() > 0 then
       return
     end
-    vim.cmd.cd(vim.fn.fnameescape(dir))
+
     vim.defer_fn(function()
       -- Restore the session saved for THIS project (opens your last file(s))
       local ok = pcall(function()
@@ -163,16 +166,65 @@ vim.api.nvim_create_autocmd('TextYankPost', {
   end,
 })
 
--- Close Neo-tree cleanly before saving sessions so it is never serialized into session files
-vim.api.nvim_create_autocmd({ 'User', 'VimLeavePre' }, {
-  desc = 'Close Neo-tree before saving session',
+-- Close Neo-tree cleanly on exit before saving sessions so it is never serialized into session files
+vim.api.nvim_create_autocmd('VimLeavePre', {
+  desc = 'Close Neo-tree before saving session on exit',
   group = vim.api.nvim_create_augroup('prat-neotree-session-clean', { clear = true }),
-  callback = function(ev)
-    if ev.event == 'User' and ev.match ~= 'PersistenceSavePre' then
-      return
-    end
+  callback = function()
     pcall(function()
       require('neo-tree.command').execute { action = 'close' }
     end)
   end,
 })
+
+-- Safely cleanup dead or crashed DAP debug sessions so ExitPre never throws "cannot resume dead coroutine"
+vim.api.nvim_create_autocmd('ExitPre', {
+  desc = 'Safely cleanup dead DAP sessions on exit',
+  group = vim.api.nvim_create_augroup('prat-dap-clean-exit', { clear = true }),
+  callback = function()
+    local ok, dap = pcall(require, 'dap')
+    if ok and dap and dap.sessions then
+      for _, s in pairs(dap.sessions()) do
+        if s and (s.closed or not s.client or (s.coro and coroutine.status(s.coro) == 'dead')) then
+          pcall(function()
+            s:close()
+          end)
+        end
+      end
+    end
+  end,
+})
+
+-- Continuous crash / power-cut proof session saving:
+-- Automatically updates the session file on disk when saving files, when app loses focus,
+-- or periodically every 2 minutes so unexpected power loss never loses your session.
+local function trigger_session_save()
+  local ok, persistence = pcall(require, 'persistence')
+  if not ok or not persistence then
+    return
+  end
+  local real_files = vim.tbl_filter(function(b)
+    if not vim.api.nvim_buf_is_valid(b) or not vim.bo[b].buflisted or vim.bo[b].buftype ~= '' then
+      return false
+    end
+    local name = vim.api.nvim_buf_get_name(b)
+    return name ~= '' and vim.fn.filereadable(name) == 1 and not name:find('neo%-tree')
+  end, vim.api.nvim_list_bufs())
+
+  if #real_files > 0 then
+    pcall(persistence.save)
+  end
+end
+
+vim.api.nvim_create_autocmd({ 'BufWritePost', 'FocusLost' }, {
+  desc = 'Continuously auto-save session on file save or app blur',
+  group = vim.api.nvim_create_augroup('prat-auto-save-session', { clear = true }),
+  callback = function()
+    trigger_session_save()
+  end,
+})
+
+local session_timer = vim.uv.new_timer()
+if session_timer then
+  session_timer:start(120000, 120000, vim.schedule_wrap(trigger_session_save))
+end

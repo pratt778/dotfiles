@@ -123,22 +123,25 @@ return {
     -- Dap UI setup
     -- For more information, see |:help nvim-dap-ui|
     dapui.setup {
-      -- Compact layout: only console + scopes, small bottom area.
-      -- The UI no longer auto-opens on run — press <F7> to toggle it when
-      -- you actually want to inspect scopes/breakpoints.
+      -- Compact layout: scopes + call stack + console at the bottom
+      -- Press <F7> to toggle it whenever you are paused at a breakpoint
       layouts = {
         {
           elements = {
             {
-              id = 'console',
-              size = 0.55,
+              id = 'scopes',
+              size = 0.35,
             },
             {
-              id = 'scopes',
-              size = 0.45,
+              id = 'stacks',
+              size = 0.35,
+            },
+            {
+              id = 'console',
+              size = 0.30,
             },
           },
-          size = 10,
+          size = 12,
           position = 'bottom',
         },
       },

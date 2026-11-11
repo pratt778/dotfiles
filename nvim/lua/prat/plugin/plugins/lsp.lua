@@ -75,9 +75,16 @@ return {
 
         -- Jump to the implementation of the word under your cursor.
         --  Useful when your language has ways of declaring types without an actual implementation.
-        map('gI', function()
-          require('telescope.builtin').lsp_implementations()
-        end, '[G]oto [I]mplementation')
+        local function goto_implementation()
+          local ok, telescope = pcall(require, 'telescope.builtin')
+          if ok and telescope.lsp_implementations then
+            telescope.lsp_implementations { reuse_win = true }
+          else
+            vim.lsp.buf.implementation()
+          end
+        end
+        map('gi', goto_implementation, '[G]oto [I]mplementation')
+        map('gI', goto_implementation, '[G]oto [I]mplementation')
 
         -- Jump to the type of the word under your cursor.
         --  Useful when you're not sure what type a variable is and you want to see
@@ -111,6 +118,7 @@ return {
         map('<S-F12>', function()
           require('telescope.builtin').lsp_references()
         end, 'Find References (VSCode Shift+F12)')
+        map('<C-F12>', goto_implementation, 'Go to Implementation (VSCode Ctrl+F12)')
 
         -- VSCode-style Quick Fix (Ctrl+.)
         map('<C-.>', vim.lsp.buf.code_action, 'Quick Fix (VSCode Ctrl+.)', { 'n', 'x' })

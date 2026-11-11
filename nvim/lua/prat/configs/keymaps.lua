@@ -12,6 +12,11 @@ vim.keymap.set('n', '<C-s>', '<cmd>write<CR>', { desc = 'Save file' })
 vim.keymap.set('i', '<C-s>', '<Esc><cmd>write<CR>a', { desc = 'Save file' })
 vim.keymap.set('v', '<C-s>', '<Esc><cmd>write<CR>', { desc = 'Save file' })
 
+-- Fast Quit & Save All (replaces tedious :wqa when multiple tabs/buffers are open)
+vim.keymap.set('n', '<leader>qq', '<cmd>wqa<CR>', { desc = 'Save all & quit Neovim' })
+vim.keymap.set('n', '<leader>qa', '<cmd>wqa<CR>', { desc = 'Save all & quit Neovim' })
+vim.keymap.set('n', '<leader>q!', '<cmd>qa!<CR>', { desc = 'Force quit (discard unsaved changes)' })
+
 vim.keymap.set('n', '<C-z>', 'u', { desc = 'Undo' })
 vim.keymap.set('i', '<C-z>', '<Esc>ui', { desc = 'Undo' })
 vim.keymap.set('v', '<C-z>', '<Esc>u', { desc = 'Undo' })
@@ -148,6 +153,19 @@ vim.keymap.set('n', '<A-Left>', '<C-t>', { desc = 'Jump back from definition (VS
 vim.keymap.set('i', '<A-Left>', '<Esc><C-t>', { desc = 'Jump back from definition (VSCode Alt+Left)' })
 vim.keymap.set('n', '<A-Right>', '<cmd>execute "normal! \\<C-i>"<CR>', { desc = 'Jump forward' })
 
+-- Go to implementation (prevents default Vim 'gi' from switching to insert mode)
+local function lsp_impl()
+  local ok, telescope = pcall(require, 'telescope.builtin')
+  if ok and telescope.lsp_implementations then
+    telescope.lsp_implementations { reuse_win = true }
+  else
+    vim.lsp.buf.implementation()
+  end
+end
+vim.keymap.set('n', 'gi', lsp_impl, { desc = 'Go to implementation' })
+vim.keymap.set('n', 'gI', lsp_impl, { desc = 'Go to implementation' })
+vim.keymap.set('n', '<C-F12>', lsp_impl, { desc = 'Go to implementation (VSCode Ctrl+F12)' })
+
 
 local function selected_text()
   local saved_text = vim.fn.getreg('z')
@@ -165,11 +183,15 @@ local function vim_literal_search_pattern(text)
   return [[\V]] .. vim.fn.escape(text, [[/\]])
 end
 
+local last_search_query = ''
+
 local function search_prompt(default)
-  local query = vim.fn.input('Find: ', default or vim.fn.expand '<cword>')
+  local initial = default or (last_search_query ~= '' and last_search_query) or vim.fn.expand '<cword>'
+  local query = vim.fn.input('Find: ', initial)
   if query == '' then
     return
   end
+  last_search_query = query
 
   local pattern = vim_literal_search_pattern(query)
   vim.fn.setreg('/', pattern)
@@ -182,19 +204,27 @@ local function search_prompt(default)
 end
 
 local function replace_prompt(replace_all, default)
-  local query = vim.fn.input('Find: ', default or vim.fn.expand '<cword>')
+  local initial = default or (last_search_query ~= '' and last_search_query) or vim.fn.expand '<cword>'
+  local query = vim.fn.input('Find: ', initial)
   if query == '' then
     return
   end
+  last_search_query = query
 
   local replacement = vim.fn.input('Replace with: ')
   local pattern = vim_literal_search_pattern(query)
   local escaped_replacement = vim.fn.escape(replacement, [[/\]] .. '&')
   local flags = replace_all and 'g' or 'gc'
 
+  if not replace_all then
+    vim.notify('Confirm replace: [y]es, [n]o, [a]ll, [q]uit', vim.log.levels.INFO)
+  end
+
   local ok, err = pcall(vim.cmd, string.format('%%s/%s/%s/%s', pattern, escaped_replacement, flags))
   if not ok and err and err:find('E486') then
     vim.notify('Pattern not found: ' .. query, vim.log.levels.WARN)
+  elseif ok then
+    vim.notify('Replace complete!', vim.log.levels.INFO)
   end
 end
 
@@ -221,6 +251,10 @@ end, { desc = 'Replace' })
 vim.keymap.set('v', '<C-h>', function()
   replace_prompt(false, selected_text())
 end, { desc = 'Replace selection' })
+
+vim.keymap.set({ 'n', 'v' }, '<leader>rp', function()
+  replace_prompt(false)
+end, { desc = 'Replace in file' })
 
 vim.keymap.set('n', '<C-S-h>', function()
   replace_prompt(true)
@@ -292,19 +326,63 @@ end, { desc = 'Project-wide Replace' })
 -- ctrl backspace deletes the whole word (VSCode-style)
 vim.keymap.set('i', '<C-BS>', '<C-w>', { desc = 'Delete word before cursor' })
 
--- Ctrl+Tab / Ctrl+Shift+Tab: cycle between open files (VSCode-style)
-vim.keymap.set('n', '<C-Tab>', '<cmd>bnext<CR>', { desc = 'Next file (VSCode Ctrl+Tab)' })
-vim.keymap.set('n', '<C-S-Tab>', '<cmd>bprevious<CR>', { desc = 'Previous file (VSCode Ctrl+Shift+Tab)' })
-vim.keymap.set('i', '<C-Tab>', '<Esc><cmd>bnext<CR>a', { desc = 'Next file (VSCode Ctrl+Tab)' })
-vim.keymap.set('i', '<C-S-Tab>', '<Esc><cmd>bprevious<CR>a', { desc = 'Previous file (VSCode Ctrl+Shift+Tab)' })
+-- ── Fast Alternate File Switching (Previous File Toggle) ─────────────────
+-- Toggles back and forth between current file and last visited file.
+local function switch_to_previous_file()
+  local cur = vim.api.nvim_get_current_buf()
+  local alt = vim.fn.bufnr('#')
+  if alt > 0 and alt ~= cur and vim.fn.buflisted(alt) == 1 and vim.api.nvim_buf_is_valid(alt) then
+    vim.cmd('buffer ' .. alt)
+    return
+  end
 
--- ── Terminal toggle (VSCode-style Ctrl+backtick, plus <leader>tt) ────────
+  local ok = pcall(vim.cmd, 'b#')
+  if not ok then
+    local bufs = vim.tbl_filter(function(b)
+      return vim.bo[b].buflisted and vim.bo[b].buftype == '' and vim.api.nvim_buf_get_name(b) ~= ''
+    end, vim.api.nvim_list_bufs())
+    if #bufs > 1 then
+      pcall(vim.cmd, 'bprevious')
+    else
+      vim.notify('No previous file to switch to yet', vim.log.levels.INFO)
+    end
+  end
+end
+
+-- 1. Space + Tab: Works 100% in EVERY terminal (immune to OS hijacking)
+vim.keymap.set('n', '<leader><Tab>', switch_to_previous_file, { desc = 'Toggle previous file (Space+Tab)' })
+
+-- 2. Backspace in normal mode: Single tap on the big Backspace key to flip back-and-forth!
+vim.keymap.set('n', '<BS>', switch_to_previous_file, { desc = 'Toggle previous file (Backspace)' })
+
+-- 3. Space + a: Alternate file toggle
+vim.keymap.set('n', '<leader>a', switch_to_previous_file, { desc = 'Toggle alternate/previous file' })
+
+-- 4. Alt+Tab & Ctrl+Tab (for GUI / terminals that support CSI u / don't eat them)
+vim.keymap.set('n', '<A-Tab>', switch_to_previous_file, { desc = 'Switch to previous file (Alt+Tab)' })
+vim.keymap.set('i', '<A-Tab>', function()
+  vim.cmd 'stopinsert'
+  vim.schedule(switch_to_previous_file)
+end, { desc = 'Switch to previous file (Alt+Tab)' })
+
+vim.keymap.set('n', '<C-Tab>', switch_to_previous_file, { desc = 'Switch to previous file (Ctrl+Tab)' })
+vim.keymap.set('i', '<C-Tab>', function()
+  vim.cmd 'stopinsert'
+  vim.schedule(switch_to_previous_file)
+end, { desc = 'Switch to previous file (Ctrl+Tab)' })
+
+-- ── Terminal toggle (Ctrl+j, Ctrl+backtick, plus <leader>tt) ────────
 -- Same key opens AND closes the terminal, from Normal, Insert or Terminal mode.
 local function toggle_terminal()
   require('snacks').terminal.toggle(nil, { title = 'Terminal' })
 end
+vim.keymap.set({ 'n', 't' }, '<C-j>', toggle_terminal, { desc = 'Toggle terminal' })
 vim.keymap.set({ 'n', 't' }, '<C-`>', toggle_terminal, { desc = 'Toggle terminal' })
 vim.keymap.set({ 'n', 't' }, '<leader>tt', toggle_terminal, { desc = 'Toggle terminal' })
+vim.keymap.set('i', '<C-j>', function()
+  vim.cmd 'stopinsert'
+  vim.schedule(toggle_terminal)
+end, { desc = 'Toggle terminal' })
 vim.keymap.set('i', '<C-`>', function()
   vim.cmd 'stopinsert'
   vim.schedule(toggle_terminal)
@@ -332,7 +410,6 @@ vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' }
 --
 --  See `:help wincmd` for a list of all window commands
 vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { desc = 'Move focus to the right window' })
-vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
 vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
 vim.keymap.set('n', '<leader>sm', '<C-w>|', { desc = 'Maximize width of split' })
 vim.keymap.set('n', '<leader>s=', '<C-w>=', { desc = 'Equalizeo split' })

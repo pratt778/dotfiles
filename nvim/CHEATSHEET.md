@@ -30,10 +30,11 @@ The core keyboard shortcuts you use 90% of the time without ever touching a mous
 | `Ctrl + s` | **Save File** | Works in Normal, Insert, and Visual modes |
 | **`gd`** (or `F12`) | **Go to Definition** | Cursor on any class/function/variable → jump straight inside! |
 | **`<C-t>`** (or `Alt + Left`) | **Jump Back** | Return to where you were before pressing `gd` |
+| `<leader><Tab>` / `<BS>` | **Previous File** | Instant flip between last 2 files (Space+Tab or Backspace) |
 | `Ctrl + o` | **Quick Open File** | Fuzzy file search across project (VSCode `Ctrl+P`) |
 | `Ctrl + f` | **Find in File** | Search inside current buffer (`n` = next, `N` = prev) |
-| `Ctrl + h` | **Find & Replace** | Interactive replace with confirmation (`y`/`n`/`a`/`q`) |
-| `Ctrl + ` ` | **Toggle Terminal** | Opens/closes popup terminal from anywhere |
+| `Ctrl + h` (or `<leader>rp`) | **Find & Replace** | Interactive replace with confirmation (`y`/`n`/`a`/`q`) |
+| `Ctrl + j` (or `Ctrl + ` `) | **Toggle Terminal** | Opens/closes popup terminal from anywhere |
 | `\` | **Toggle Sidebar** | Opens/closes Neo-tree without stealing focus from code |
 | `<leader>ee` | **Focus Sidebar** | Jumps cursor straight into the Neo-tree file tree |
 | `;;` | **Exit Insert Mode** | Return to Normal mode instantly |
@@ -68,7 +69,7 @@ Standard editing shortcuts that keep you fast on the keyboard across Normal, Ins
 | `Ctrl + f` | **Find in file** (type query; press `n` for next match, `N` for previous) |
 | `<leader>/` | **Fuzzy lines search** (interactive dropdown filtering current file) |
 | `*` | Search the word currently under cursor forward |
-| `Ctrl + h` | **Find & Replace** with step-by-step confirmation (`y` replace, `n` skip, `a` all) |
+| `Ctrl + h` or `<leader>rp` | **Find & Replace** with step-by-step confirmation (`y` replace, `n` skip, `a` all) |
 | `Ctrl + Shift + h` or `<leader>ra` | **Replace ALL occurrences** in current file |
 | *Visual selection* + `Ctrl + h` | Replace only within selected lines |
 
@@ -115,14 +116,30 @@ Standard editing shortcuts that keep you fast on the keyboard across Normal, Ins
 | **`Ctrl + n`** | **Instant New File**: pre-fills current folder (or `lib/` in Flutter, `src/` in Rust). Type filename → parent folders + file created on disk immediately! |
 | `Ctrl + e` | Alternative `mini.files` explorer popup |
 
-### 3. Buffers & Tabs
+### 3. Buffers, Tabs & Sessions
 | Shortcut | Action |
 |---|---|
-| `Shift + l` / `Shift + h` | **Next / Previous tab** (always works) |
-| `Ctrl + Tab` / `Ctrl + Shift + Tab` | Next / Previous tab (VSCode style) |
+| **`<leader><Tab>`** | **Toggle Previous File** (Space then Tab — instant switch between 2 files) |
+| **`<BS>`** | **Toggle Previous File** (Single tap on Backspace in Normal mode!) |
+| **`<leader>a`** | **Toggle Alternate File** (Space then a) |
+| `Shift + l` / `Shift + h` | **Next / Previous tab** in tabline (linear cycling) |
 | `<leader>bd` | **Close current buffer** |
 | `<leader>br` / `<leader>bl` | Close buffers to the right / left |
 | `<leader>bp` | Toggle pin buffer tab |
+| `<leader>qs` | **Restore Project Session** (restore all tabs & layout) |
+| `<leader>ql` | **Restore Last Session** |
+| `<leader>qd` | Don't save current session |
+
+### 4. Saving & Quitting
+| Shortcut / Command | Action | Description |
+|---|---|---|
+| `Ctrl + s` | **Save File** | Saves current file (Normal, Insert, Visual) |
+| **`<leader>qq`** or `<leader>qa` | **Save All & Quit** | Writes all modified files and exits Neovim cleanly |
+| **`<leader>q!`** | **Force Quit** | Exits Neovim discarding unsaved changes |
+| `:wqa` | Command | **W**rite **Q**uit **A**ll — use this when multiple files are open (prevents E37 / E162) |
+| `:wa` | Command | Write/save all open files |
+| `:qa!` | Command | Force quit all without saving |
+| `ZZ` | Normal mode | Quick save current file and close |
 
 ---
 
@@ -141,7 +158,7 @@ Standard editing shortcuts that keep you fast on the keyboard across Normal, Ins
 | **`<C-t>`** or `Alt + Left` | **Jump Back** | Return to previous location before jumping |
 | `Alt + Right` | **Jump Forward** | Re-jump forward to the definition |
 | **`gr`** or `Shift + F12` | **Find All References** | Search all places where this class/function is used |
-| **`gI`** | **Go to Implementation** | Jump to interface/trait implementation |
+| **`gi`** or `gI` / `Ctrl + F12` | **Go to Implementation** | Jump to interface/abstract class implementation (lowercase `gi` works!) |
 | **`K`** | **Hover Documentation** | View type signatures, documentation, and parameter info |
 | `F2` or `<leader>rn` | **Rename Symbol** | Safe symbol rename across the entire project |
 | `Ctrl + .` or `<leader>ca` | **Quick Fix / Code Actions** | Auto-import, wrap widgets, Clippy fixes |
@@ -168,17 +185,23 @@ Standard editing shortcuts that keep you fast on the keyboard across Normal, Ins
 
 ## 🐛 Debugging & Breakpoints (DAP)
 
-Windows only open when actively needed or requested. Zero clutter.
+> [!TIP]
+> **VSCode Debug Bar Equivalents**:
+> - **Play / Continue (▶)**: **`F5`** (unpauses execution)
+> - **Step Over (↷)**: **`F2`** | **Step Into (⇲)**: **`F1`** | **Step Out (⇱)**: **`F3`**
+> - **Inspect Variables & Call Stack**: **`F7`** (Scopes + Stack frames + Console)
+> - **View Error Details**: **`<leader>fd`** (opens Flutter logs where red error stack trace is printed)
+> - **Stop App (⏹)**: **`<leader>fl` → 🛑 Quit App** (or `:FlutterQuit`)
 
 | Shortcut | Action |
 |---|---|
 | **`<leader>b`** or `<leader>db` | **Toggle Breakpoint** on current line |
 | **`<leader>B`** | **Conditional Breakpoint** (prompts for expression, e.g. `count > 10`) |
-| **`F5`** or `Alt + p` | **Start / Continue Debugging** |
+| **`F5`** or `Alt + p` | **Start / Continue Debugging** (Play ▶) |
 | **`F1`** | **Step Into** (enter function/method) |
 | **`F2`** | **Step Over** (execute next line) |
 | **`F3`** | **Step Out** (finish current function and return) |
-| **`F7`** | **Toggle Debug UI** strip at bottom (Scopes & variables on right, console on left) |
+| **`F7`** | **Toggle Debug UI** (Variables/Scopes + Call Stack + Console) |
 | `<leader>dc` | Floating Debug Console (`q` to dismiss) |
 | `<leader>dr` | Floating REPL (evaluate live expressions while paused) |
 
@@ -188,8 +211,8 @@ Windows only open when actively needed or requested. Zero clutter.
 
 | Shortcut | Action |
 |---|---|
-| **`Ctrl + ` `** (Ctrl + backtick) | **Open / Close popup terminal** (works in Normal, Insert, & inside terminal) |
-| `<leader>tt` | Alternative toggle (if your terminal intercepts Ctrl+backtick) |
+| **`Ctrl + j`** (or `Ctrl + ` `) | **Open / Close popup terminal** (works in Normal, Insert, & inside terminal) |
+| `<leader>tt` | Alternative toggle (Space → t → t) |
 | `Esc Esc` | Leave terminal typing mode → Normal mode (allows scrolling and copying text) |
 | Type `exit` | Permanently terminate the shell and close window |
 | `<leader>lg` | Open **LazyGit** full screen (`q` to exit) |
@@ -209,9 +232,11 @@ Windows only open when actively needed or requested. Zero clutter.
 | `<leader>fo` | **Widget Tree Outline** | Toggles in-editor Widget Tree panel sidebar |
 | `<leader>fw` | **Browser DevTools** | Opens Dart DevTools & Widget Inspector in browser |
 | `<leader>fv` | **Visual Debug Guidelines** | Toggles paint baselines & margin boxes on screen |
-| `<leader>fd` | **Toggle Flutter Logs** | Opens/closes the running app log split |
+| `<leader>fd` | **Toggle Flutter Logs** | Opens logs (errors in red!). Press `Enter` or click on any file:line to jump straight to it! |
 | `<leader>fs` | **Flutter App Status** | Shows building / running state and elapsed time |
 | `Ctrl + .` / `<leader>ca` | **Widget Refactoring** | Wrap with Padding/Center/Column/Row/Widget, Extract Widget |
+| **`<leader>cb`** | **Wrap with BLoC** | Wrap with MultiBlocProvider, BlocProvider, BlocBuilder, BlocConsumer, BlocListener... (supports smart conversion: e.g. turning `BlocProvider` → `MultiBlocProvider` cleanly without duplicating `child:`) |
+| **`<leader><Tab>`** / **`<BS>`** | **Toggle Previous Screen** | Instant flip between last 2 files (e.g. task_board ↔ task_detail) |
 
 ### Daily Flutter Workflow (Step-by-Step)
 1. **Launch Project**: `nvim .` in your Flutter project folder.

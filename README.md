@@ -118,8 +118,7 @@ Logs land in `~/.local/state/i3-session/logs/{save,restore}.log`.
 - Replaces the old pristine `kickstart.nvim` copy that used to live here.
 - The previous clone of `arjablc/nvim_conf` is no longer used and its `.git`
   directory was removed, so the config is versioned by this repo instead.
-- Personal modules live under `lua/prat/` (the upstream `knot` modules were
-  renamed to `prat`) and `lua/vs_config/` for the VS Code Neovim extension.
+- Personal modules live under `lua/prat/` (named for `pratham` / `prattz`) and `lua/vs_config/` for the VS Code Neovim extension.
 - `init.lua` loads `vs_config` when running inside VS Code, otherwise it loads
   `prat.configs` and `prat.plugin`.
 - Upstream-only `.github/` workflow and issue-template files were dropped, and

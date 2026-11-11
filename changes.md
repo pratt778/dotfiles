@@ -124,8 +124,7 @@ and out.
   in use, and symlinked `~/.config/nvim` at it.
 - The config used to be a separate clone of `arjablc/nvim_conf`; that `.git`
   directory was removed so this repo is the single source of truth.
-- The upstream `lua/knot/` modules were renamed to `lua/prat/`, so personal
-  modules are no longer filed under the upstream author's name.
+- Modules live under `lua/prat/`, so personal modules are filed under `pratham` / `prattz`.
 - `lua/vs_config/` was added for the VS Code Neovim extension; `init.lua` loads
   it only when `vim.g.vscode` is set, otherwise it loads `prat.configs` and
   `prat.plugin`.
